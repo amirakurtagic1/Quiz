@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using QuizService.Repositories;
+using QuizService.Repositories.Interfaces;
+using QuizService.Services.Interfaces;
 
 namespace QuizService;
 
@@ -24,7 +28,10 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddMvc();
+        services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddSingleton(InitializeDb());
+        services.AddSingleton<IQuizService, Services.QuizService>();
+        services.AddSingleton<IQuizRepository, QuizRepository>();
         services.AddControllers();
     }
 
