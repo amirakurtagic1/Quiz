@@ -3,9 +3,9 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using Microsoft.AspNetCore.Mvc;
 using QuizService.Model.Domain;
 using QuizService.Repositories.Interfaces;
+
 
 namespace QuizService.Repositories
 {
@@ -17,22 +17,60 @@ namespace QuizService.Repositories
             this._connection = connection;
         }
 
-        public async Task<int> CreateAnswerAsync(Answer answer)
+        public async Task<long> CreateAnswerAsync(Answer answer)
         {
             const string sql = "INSERT INTO Answer (Text, QuestionId) VALUES(@Text, @QuestionId); SELECT LAST_INSERT_ROWID();";
-            return (int)await _connection.ExecuteScalarAsync(sql, new { Text = answer.Text, QuestionId = answer.QuestionId });
+            return (long)await _connection.ExecuteScalarAsync(sql, new { Text = answer.Text, QuestionId = answer.QuestionId });
         }
 
+        public async Task<long> CreateAnswersAsync(int quizId, int questionId, List<Answer> answers)
+        {
+            string sql = "INSERT INTO Answer (Text, QuestionId) VALUES";
+            foreach (var answer in answers)
+            {
+                sql += $"(\"{answer.Text}\",{questionId}),";
+            }
+            sql = sql.Remove(sql.Length - 1);
+            sql += "; SELECT changes();";
+
+            return (long)await _connection.ExecuteScalarAsync(sql);
+        }
         public async Task<long> CreateAsync(Quiz quiz)
         {
             var sql = $"INSERT INTO Quiz (Title) VALUES('{quiz.Title}'); SELECT LAST_INSERT_ROWID();";
             return (long)await _connection.ExecuteScalarAsync(sql);
         }
 
-        public async Task<int?> CreateQuestionAsync(Question question)
+        public async Task<long?> CreateQuestionAsync(Question question)
         {
             const string sql = "INSERT INTO Question (Text, QuizId) VALUES(@Text, @QuizId); SELECT LAST_INSERT_ROWID();";
-            return (int)await _connection.ExecuteScalarAsync(sql, new { Text = question.Text, QuizId = question.QuizId });
+            return (long)await _connection.ExecuteScalarAsync(sql, new { Text = question.Text, QuizId = question.QuizId });
+        }
+
+        public async Task<long> CreateQuestionsAsync(int quizId, List<Question> questions)
+        {
+            string sql = "INSERT INTO Question (Text, QuizId) VALUES";
+            foreach (var question in questions)
+            {
+                sql += $"(\"{question.Text}\",{quizId}),";
+            }
+            sql = sql.Remove(sql.Length - 1);
+            sql += "; SELECT changes();";
+
+            return (long)await _connection.ExecuteScalarAsync(sql);
+        }
+
+        public async Task<long> CreateQuizResponseAsync(List<QuizResponse> responses)
+        {
+            string sql = "INSERT INTO QuizResponse (QuizId, QuestionId, AnswerId, UserId) VALUES";
+            foreach (var response in responses)
+            {
+                sql += $"({response.QuizId},{response.QuestionId},{response.AnswerId},{response.UserId}),";
+            }
+            sql = sql.Remove(sql.Length - 1);
+            sql += "; SELECT changes();";
+
+            return (long)await _connection.ExecuteScalarAsync(sql);
         }
 
         public async Task DeleteAnswerAsync(int id)
@@ -51,6 +89,12 @@ namespace QuizService.Repositories
         {
             const string sql = "DELETE FROM Question WHERE Id = @QuestionId";
             await _connection.ExecuteScalarAsync(sql, new { QuestionId = id });
+        }
+
+        public async Task<long> GetAnswerByText(string text)
+        {
+            const string sql = "SELECT Id FROM Answer WHERE Text = @Text;";
+            return (long)await _connection.ExecuteScalarAsync(sql, new {Text = text});
         }
 
         public async Task<Dictionary<int, IList<Answer>>> GetAnswersByQuizId(int id)
@@ -78,10 +122,28 @@ namespace QuizService.Repositories
             return await _connection.QuerySingleOrDefaultAsync<Quiz>(quizSql, new { Id = id });
         }
 
+        public async Task<Question> GetQuestionByIdAsync(int id)
+        {
+            const string quizSql = "SELECT * FROM Question WHERE Id = @Id;";
+            return await _connection.QuerySingleOrDefaultAsync<Question>(quizSql, new { Id = id });
+        }
+
+        public async Task<Question> GetQuestionByQuizIdAndIdAsync(int quizId, int questionId)
+        {
+            const string quizSql = "SELECT * FROM Question WHERE Id = @Id AND QuizId = @QuizId;";
+            return await _connection.QuerySingleOrDefaultAsync<Question>(quizSql, new { Id = questionId, QuizId = quizId});
+        }
+
         public async Task<IEnumerable<Question>> GetQuestionsByQuizId(int id)
         {
             const string questionsSql = "SELECT * FROM Question WHERE QuizId = @QuizId;";
             return await _connection.QueryAsync<Question>(questionsSql, new { QuizId = id });
+        }
+
+        public async Task<IEnumerable<QuizResponse>> GetQuizResponsesAsync(int quizId, int userId)
+        {
+            const string sql = "SELECT * FROM QuizResponse WHERE QuizId = @QuizId AND UserId = @UserId;";
+            return await _connection.QueryAsync<QuizResponse>(sql, new { QuizId = quizId, UserId = userId });
         }
 
         public async Task<int> UpdateAnswerAsync(Answer answer)

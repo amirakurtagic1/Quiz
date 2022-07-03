@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Data;
-using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using QuizService.Model;
 using QuizService.Services.Interfaces;
@@ -33,6 +31,13 @@ public class QuizController : Controller
         if (quiz == null) return NotFound();
         return this.Ok(quiz);
     }
+    // GET api/quizzes/1/user/1/result
+    [HttpGet("{id}/user/{userId}/result")]
+    public async Task<int> GetQuizResult(int id, int userId)
+    {
+        var points = await _quizService.GetQuizResult(id, userId);
+        return points;
+    }
 
     // POST api/quizzes
     [HttpPost]
@@ -40,6 +45,14 @@ public class QuizController : Controller
     {
         var id = await _quizService.CreateAsync(value);
         return Created($"/api/quizzes/{id}", null);
+    }
+
+     // POST api/quizzes/response
+    [HttpPost("response")]
+    public async Task<IActionResult> PostQuizResponses([FromBody] List<TakeQuizModel> value)
+    {
+        var numberOfCreatedItems = await _quizService.CreateQuizResponseAsync(value);
+        return Ok(numberOfCreatedItems);
     }
 
     // PUT api/quizzes/5
@@ -73,6 +86,15 @@ public class QuizController : Controller
         return Created($"/api/quizzes/{id}/questions/{questionId}", null);
     }
 
+    // POST api/quizzes/5/questions
+    [HttpPost]
+    [Route("{id}/multiple-questions")]
+    public async Task<IActionResult> PostQuestions(int id, [FromBody] List<QuestionCreateModel> questions)
+    {
+        var numberOfInsertedRows = await _quizService.CreateQuestionsAsync(id, questions);
+        return Ok($"Number of created questions: {numberOfInsertedRows}");
+    }
+
     // PUT api/quizzes/5/questions/6
     [HttpPut("{id}/questions/{qid}")]
     public async Task<IActionResult> PutQuestion(int id, int qid, [FromBody] QuestionUpdateModel value)
@@ -99,6 +121,16 @@ public class QuizController : Controller
     {
         var answerId = await _quizService.CreateAnswerAsync(id, qid, value);
         return Created($"/api/quizzes/{id}/questions/{qid}/answers/{answerId}", null);
+    }
+
+    // POST api/quizzes/5/questions/6/multiple-answers
+    [HttpPost]
+    [Route("{id}/questions/{qid}/multiple-answers")]
+    public async Task<IActionResult> PostAnswers(int id, int qid, [FromBody] List<AnswerCreateModel> answers)
+    {
+        var numberOfInsertedRows = await _quizService.CreateAnswersAsync(id, qid, answers);
+        if(numberOfInsertedRows != answers.Count) return NotFound();
+        return Ok($"Number of created answers: {numberOfInsertedRows}");
     }
 
     // PUT api/quizzes/5/questions/6/answers/7

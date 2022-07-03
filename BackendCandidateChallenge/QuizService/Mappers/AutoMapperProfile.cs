@@ -25,11 +25,21 @@ namespace QuizService.Mappers
             .ForMember(x => x.Text, src => src.MapFrom(x => x.Text))
             .ForMember(x => x.CorrectAnswerId, src => src.MapFrom(x => x.CorrectAnswerId));
 
+            CreateMap<Question, QuestionResponseModel>()
+            .ForMember(x => x.Text, src => src.MapFrom(x => x.Text))
+            .ForMember(x => x.CorrectAnswerId, src => src.MapFrom(x => x.CorrectAnswerId));
+
             CreateMap<AnswerUpdateModel, Answer>()
             .ForMember(x => x.Text, src => src.MapFrom(x => x.Text));
             
             CreateMap<AnswerCreateModel, Answer>()
             .ForMember(x => x.Text, src => src.MapFrom(x => x.Text));
+
+            CreateMap<TakeQuizModel, QuizResponse>()
+            .ForMember(x => x.QuizId, src => src.MapFrom(x => x.QuizId))
+            .ForMember(x => x.QuestionId, src => src.MapFrom(x => x.QuestionId))
+            .ForMember(x => x.AnswerId, src => src.MapFrom(x => x.AnswerId))
+            .ForMember(x => x.UserId, src => src.MapFrom(x => x.UserId));
 
         }
     }

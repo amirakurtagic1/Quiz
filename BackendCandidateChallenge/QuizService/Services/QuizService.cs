@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,11 +20,29 @@ namespace QuizService.Services
             this._mapper = mapper;
         }
 
-        public async Task<int> CreateAnswerAsync(int id, int qId, AnswerCreateModel answerCreateModel)
+        public async Task<long> CreateAnswerAsync(int id, int qId, AnswerCreateModel answerCreateModel)
         {
             var answer = _mapper.Map<AnswerCreateModel, Answer>(answerCreateModel);
             answer.QuestionId = qId;
             return await _quizRepository.CreateAnswerAsync(answer);
+        }
+
+        public async Task<long> CreateAnswersAsync(int quizId, int questionId, List<AnswerCreateModel> answers)
+        {
+            var listOfAnswers = _mapper.Map<IEnumerable<Answer>>(answers).ToList();
+            listOfAnswers.ForEach(x => x.QuestionId = questionId);
+            var correctAnswer = listOfAnswers.First();
+            correctAnswer.QuestionId = questionId;
+            var correctAnswerId = await _quizRepository.CreateAnswerAsync(correctAnswer);
+            listOfAnswers.RemoveAt(0);
+            var numberOfCreatedAnswers = await _quizRepository.CreateAnswersAsync(quizId, questionId, listOfAnswers);
+            numberOfCreatedAnswers += 1;
+
+            var question = await _quizRepository.GetQuestionByIdAsync(questionId);
+            question.CorrectAnswerId = Convert.ToInt32(correctAnswerId);
+            var response = await _quizRepository.UpdateQuestionAsync(question);
+
+            return numberOfCreatedAnswers;
         }
 
         public async Task<long> CreateAsync(QuizCreateModel quizCreateModel)
@@ -32,13 +51,29 @@ namespace QuizService.Services
             return await _quizRepository.CreateAsync(quiz);
         }
 
-        public async Task<int?> CreateQuestionAsync(int quizId, QuestionCreateModel questionCreateModel)
+        public async Task<long?> CreateQuestionAsync(int quizId, QuestionCreateModel questionCreateModel)
         {
             var quiz = await _quizRepository.GetById(quizId);
             if (quiz == null) return null;
             var question = _mapper.Map<QuestionCreateModel, Question>(questionCreateModel);
             question.QuizId = quizId;
             return await _quizRepository.CreateQuestionAsync(question);
+        }
+
+        public async Task<long> CreateQuestionsAsync(int quizId, List<QuestionCreateModel> questions)
+        {
+            var questionEntities = this._mapper.Map<IEnumerable<Question>>(questions).ToList();
+            return await this._quizRepository.CreateQuestionsAsync(quizId, questionEntities);
+        }
+
+        public async Task<long> CreateQuizResponseAsync(List<TakeQuizModel> response)
+        {
+            foreach (var item in response)
+            {
+                item.AnswerId = (int)await _quizRepository.GetAnswerByText(item.Answer);
+            }
+            var quizResponses = _mapper.Map<IEnumerable<QuizResponse>>(response).ToList();
+            return await _quizRepository.CreateQuizResponseAsync(quizResponses);
         }
 
         public async Task DeleteAnswerAsync(int id)
@@ -95,6 +130,22 @@ namespace QuizService.Services
             };
         }
 
+        public async Task<QuestionResponseModel> GetQuestionByIdAsync(int id)
+        {
+            var question = await _quizRepository.GetQuestionByIdAsync(id);
+            return _mapper.Map<Question, QuestionResponseModel>(question);
+
+        }
+
+        public async Task<int> GetQuizResult(int quizId, int userId)
+        {
+            var quiz = await GetById(quizId);
+            var quizResponses = (await _quizRepository.GetQuizResponsesAsync(quizId, userId)).ToList();
+            var questions = quiz.Questions.ToList();
+            var points = quiz.Questions.Count(x => x.CorrectAnswerId.Equals(quizResponses.Single(y => y.QuestionId.Equals(x.Id)).AnswerId));
+            return points;
+        }
+
         public async Task<int> UpdateAnswerAsync(int id, AnswerUpdateModel answerUpdateModel)
         {
             var answer = _mapper.Map<AnswerUpdateModel, Answer>(answerUpdateModel);
@@ -115,6 +166,7 @@ namespace QuizService.Services
             var question = _mapper.Map<QuestionUpdateModel, Question>(questionUpdateModel);
             question.Id = id;
             return await _quizRepository.UpdateQuestionAsync(question);
+
         }
     }
 }
