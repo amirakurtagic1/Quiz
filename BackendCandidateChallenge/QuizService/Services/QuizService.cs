@@ -8,6 +8,11 @@ using QuizService.Model.Domain;
 using QuizService.Repositories.Interfaces;
 using QuizService.Services.Interfaces;
 
+/// <summary>
+/// I took advantage of the usage of Mapper to transform entities to models and vice versa.
+/// I would add try-catch blocks or null-checks to the GET, POST methods to avoid null objects in the controller (and UI later on).
+/// </summary>
+
 namespace QuizService.Services
 {
     public class QuizService : IQuizService

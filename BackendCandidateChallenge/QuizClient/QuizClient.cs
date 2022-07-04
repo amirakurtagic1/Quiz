@@ -7,7 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuizClient.Tests;
-
+/// <summary>
+/// All API uris should be kept in a static class as constant values so if needed to be changed, they could be easily found.
+/// Separate class could be added to create a HTTPClient wrapper with API uri and content as parameters to avoid duplicating of code (request&response code in this case).
+/// </summary>
 namespace QuizClient;
 
 public class QuizClient
@@ -124,11 +127,17 @@ public class QuizClient
     }
 }
 
+/// <summary>
+/// Should be class and should be in a separate file.
+/// </summary>
 public struct QuizQuestion
 {
     public string Text { get; set; }
 }
 
+/// <summary>
+/// Should be class and should be in a separate file.
+/// </summary>
 public struct Response<T>
 {
     public Response(HttpStatusCode statusCode, T value, string errorMessage = null)
@@ -143,6 +152,9 @@ public struct Response<T>
     public string ErrorMessage { get; }
 }
 
+/// <summary>
+/// Should be in a separate file as a global exception handler.
+/// </summary>
 public class QuizClientException : HttpRequestException
 {
     public HttpStatusCode ResponseStatusCode { get; }

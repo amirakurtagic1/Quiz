@@ -6,6 +6,11 @@ using Dapper;
 using QuizService.Model.Domain;
 using QuizService.Repositories.Interfaces;
 
+/// <summary>
+/// Global Note:
+/// Change all raw SQL queries to Linq queries.
+/// If not possible, create static class that will keep the raw SQL commands as const values. This will ease the proccess of making changes to the queries.
+/// </summary>
 
 namespace QuizService.Repositories
 {

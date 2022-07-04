@@ -1,5 +1,11 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// This should be a Dto object.
+/// Every class should be in a separate file and we should use a single Dto object for GET, POST, PUT purposes.
+/// It will make easier to map Dto to entity and it will be easier to read the code.
+/// This should be done for all models.
+/// </summary>
 namespace QuizService.Model;
 
 public class QuizResponseModel

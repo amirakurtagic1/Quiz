@@ -1,5 +1,7 @@
 ﻿namespace QuizClient;
-
+/// <summary>
+/// Should be class.
+/// </summary>
 public struct Quiz
 {
     public int Id;

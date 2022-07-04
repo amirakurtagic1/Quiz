@@ -4,6 +4,13 @@ using QuizService.Model;
 using QuizService.Services.Interfaces;
 using System.Threading.Tasks;
 
+/// <summary>
+/// I moved all business logic to the service and all database logic to the repository (making use of the repository-service pattern).
+/// Stylecop could be added to ensure the writing of a clean code and to enforce warnings removal.
+/// The same should be done in the pipeline (if pipelines are used to build&deploy the code) to enforce warnings removal, otherwise build will fail.
+/// Summary should be added for every method to make for easier understanding what that method does.
+/// </summary>
+
 namespace QuizService.Controllers;
 
 [Route("api/quizzes")]
